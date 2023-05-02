@@ -26,11 +26,13 @@ app.use((req, res, next) => {
 
   res.on('finish', function() {
     // good developer don't brute force deps, let's wait previous request to finish before sending a new one. It's easy with Promise
-    previousRequest = previousRequest.then(() => dataFox.push(dataToObserve));
+    // fix: remove the assignment to previousRequest
+    previousRequest.then(() => dataFox.push(dataToObserve));
 
-    requestSeen.push(req);
+    // fix: do not inject huge data into requestSeen while we only use the path
+    requestSeen.push(req.path);
     debug(`Total request seen: ${requestSeen.length}
-      Last 5 endpoints called: ${requestSeen.slice(-5).map(r => r.path)}`);
+      Last 5 endpoints called: ${requestSeen.slice(-5).map(r => r)}`);
   });
 
   next();
@@ -52,29 +54,19 @@ app.post('/getById', async (req, res) => {
 });
 
 app.post('/sendAllToS3', async (req, res) => {
-  let ids = [];
+  const data = [];
   for (let id of req.body.ids) {
-    data[id] = await client.getById(id, req);
-    ids.push(id);
+    data.push(await client.getById(id))
   }
-
-  // Do something with all data
-  await client.sendAllToS3(ids.map(id => data[id]));
-
-  // We finish the request, but we still have data in memory, we are good developer, let's remove it, we don't want to create any memory leak
-  for (let id of ids) {
-    delete data[id];
-  }
-
+  await client.sendAllToS3(data);
   res.send(`Ok`);
 });
 
 app.post('/whatNumber ', async (req, res) => {
   let id = req.body.number;
-  const data = Array(100000).fill(4);
 
   const promise = new Promise((resolve) => {
-    const sum = data.reduce((acc, val) => acc + val, id);
+    const sum = Array(100000).fill(4).reduce((acc, val) => acc + val, id);
     if (sum%2 == 0) {
       return resolve('It\'s even');
     } else {
@@ -102,9 +94,7 @@ app.post('/whatNumber ', async (req, res) => {
 // We use simple operation splitted in multiple lines
 app.post('/computeSpecialSum', async (req, res) => {
   const result = req.body.numbers.flatMap(val => Array(50).fill(val))
-    .map(val => val+1)
-    .map(val => val*2)
-    .map(val => val-1)
+    .map(val => (val+1)*2-1)
     .reduce((acc, val) => acc + val, 0);
 
   res.send(result);

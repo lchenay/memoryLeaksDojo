@@ -41,6 +41,7 @@ tests.push({
 })
 
 let before = process.memoryUsage().heapUsed / 1024 / 1024;
+let i = 0;
 
 setInterval(async () => {
     for (let {method, expect, data} of tests) {
@@ -55,7 +56,8 @@ setInterval(async () => {
         global.gc();
 
     const memoryUsed = process.memoryUsage().heapUsed / 1024 / 1024
-    
-    console.log('Memory usage: ', memoryUsed, 'MB (+', (memoryUsed) - before, 'MB)');
+    const memoryIncreased = memoryUsed - before;
+    i++;
+    console.log("Memory usage: ", memoryUsed, "MB (+", memoryIncreased, "MB) After" + i + 'runs');
     before = memoryUsed;
 }, 500)

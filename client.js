@@ -1,6 +1,6 @@
 const _ = require('lodash');
 const repository = require('./libs/repository');
-const cache = {}; data = {}, schema = repository.schema();
+const data = {}, schema = repository.schema();
 
 const client = module.exports = {
     exists: _.memoize(repository.exists),
@@ -13,12 +13,8 @@ const client = module.exports = {
             throw err;
         }
 
-        // let's be a good developper and let's try to optimise ressources by avoid to request something that can avoid
-        if (!cache[id]) {
-            cache[id] = repository.getById(id);
-        }
-
-        return cache[id];
+        // storing this huge data in cache is causing memory leak issue
+        return repository.getById(id);
     },
     sendAllToS3: (data) => {
         repository.sendAllToS3(data);
