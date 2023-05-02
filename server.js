@@ -52,20 +52,11 @@ app.post('/getById', async (req, res) => {
 });
 
 app.post('/sendAllToS3', async (req, res) => {
-  let ids = [];
+  const data = [];
   for (let id of req.body.ids) {
-    data[id] = await client.getById(id, req);
-    ids.push(id);
+    data.push(await client.getById(id))
   }
-
-  // Do something with all data
-  await client.sendAllToS3(ids.map(id => data[id]));
-
-  // We finish the request, but we still have data in memory, we are good developer, let's remove it, we don't want to create any memory leak
-  for (let id of ids) {
-    delete data[id];
-  }
-
+  await client.sendAllToS3(data);
   res.send(`Ok`);
 });
 
