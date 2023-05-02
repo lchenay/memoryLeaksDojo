@@ -9,22 +9,22 @@ chai.use(require('chai-http'));
 
 const tests = [];
 
-// tests.push({
-//     method: '/healthcheck', 
-//     data: () => ({}),
-//     expect: (err, res) => {chai.expect(res.text).to.equal('ok')}
-// })
+tests.push({
+    method: '/healthcheck', 
+    data: () => ({}),
+    expect: (err, res) => {chai.expect(res.text).to.equal('ok')}
+})
 
-// tests.push({
-//     method: '/getById', 
-//     data: () => ({id: Date.now()}), 
-//     expect: (err, res, data) => {
-//         if (Math.round(data.id/1000) % 10 == 0) {
-//             return chai.expect(res.text).to.equal('Not found')
-//         }
-//         chai.expect(res.body.id).to.equal(data.id);
-//     }
-// });
+tests.push({
+    method: '/getById', 
+    data: () => ({id: Date.now()}), 
+    expect: (err, res, data) => {
+        if (Math.round(data.id/1000) % 10 == 0) {
+            return chai.expect(res.text).to.equal('Not found')
+        }
+        chai.expect(res.body.id).to.equal(data.id);
+    }
+});
 
 tests.push({
     method: '/sendAllToS3', 
@@ -32,7 +32,7 @@ tests.push({
     expect: (err, res) => {}
 })
 
-// tests.push({method: '/whatNumber', data: () => ({number: Date.now()}), expect: (err, res) => {}})
+tests.push({method: '/whatNumber', data: () => ({number: Date.now()}), expect: (err, res) => {}})
 
 // tests.push({
 //     method: '/computeSpecialSum', 

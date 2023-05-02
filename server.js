@@ -62,10 +62,9 @@ app.post('/sendAllToS3', async (req, res) => {
 
 app.post('/whatNumber ', async (req, res) => {
   let id = req.body.number;
-  const data = Array(100000).fill(4);
 
   const promise = new Promise((resolve) => {
-    const sum = data.reduce((acc, val) => acc + val, id);
+    const sum = Array(100000).fill(4).reduce((acc, val) => acc + val, id);
     if (sum%2 == 0) {
       return resolve('It\'s even');
     } else {
