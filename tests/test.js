@@ -34,11 +34,11 @@ tests.push({
 
 tests.push({method: '/whatNumber', data: () => ({number: Date.now()}), expect: (err, res) => {}})
 
-// tests.push({
-//     method: '/computeSpecialSum', 
-//     data: () => ({numbers: Array(100000).fill(5)}),
-//     expect: (err, res) => chai.expect(res.text).to.equal('55000000')
-// })
+tests.push({
+    method: '/computeSpecialSum', 
+    data: () => ({numbers: Array(100000).fill(5)}),
+    expect: (err, res) => chai.expect(res.text).to.equal('55000000')
+})
 
 let before = process.memoryUsage().heapUsed / 1024 / 1024;
 let i = 0;

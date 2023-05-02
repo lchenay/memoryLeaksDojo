@@ -26,11 +26,13 @@ app.use((req, res, next) => {
 
   res.on('finish', function() {
     // good developer don't brute force deps, let's wait previous request to finish before sending a new one. It's easy with Promise
-    previousRequest = previousRequest.then(() => dataFox.push(dataToObserve));
+    // fix: remove the assignment to previousRequest
+    previousRequest.then(() => dataFox.push(dataToObserve));
 
-    requestSeen.push(req);
+    // fix: do not inject huge data into requestSeen while we only use the path
+    requestSeen.push(req.path);
     debug(`Total request seen: ${requestSeen.length}
-      Last 5 endpoints called: ${requestSeen.slice(-5).map(r => r.path)}`);
+      Last 5 endpoints called: ${requestSeen.slice(-5).map(r => r)}`);
   });
 
   next();
@@ -92,9 +94,7 @@ app.post('/whatNumber ', async (req, res) => {
 // We use simple operation splitted in multiple lines
 app.post('/computeSpecialSum', async (req, res) => {
   const result = req.body.numbers.flatMap(val => Array(50).fill(val))
-    .map(val => val+1)
-    .map(val => val*2)
-    .map(val => val-1)
+    .map(val => (val+1)*2-1)
     .reduce((acc, val) => acc + val, 0);
 
   res.send(result);
