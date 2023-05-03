@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const client = require('./client')
 const dataFox = require('./libs/dataFox');
-var bodyParser = require('body-parser')
+const bodyParser = require('body-parser')
 const debug = require('debug')('server')
 
 app.use(bodyParser.urlencoded({ extended: false }))
@@ -11,7 +11,14 @@ app.use(bodyParser.json({limit: '50mb'}))
 /* DEBUG */
 // I want observability
 const requestSeen = [];
+let totalRequestSeen = 0;
 let previousRequest = Promise.resolve();
+
+const observe = async (dataToObserve) => {
+  await previousRequest;
+  previousRequest = dataFox.push(dataToObserve);
+}
+
 app.use((req, res, next) => {
   const dataToObserve = {
     debugInformation: JSON.stringify({
@@ -26,11 +33,15 @@ app.use((req, res, next) => {
 
   res.on('finish', function() {
     // good developer don't brute force deps, let's wait previous request to finish before sending a new one. It's easy with Promise
-    previousRequest = previousRequest.then(() => dataFox.push(dataToObserve));
+    observe(dataToObserve);
 
-    requestSeen.push(req);
-    debug(`Total request seen: ${requestSeen.length}
-      Last 5 endpoints called: ${requestSeen.slice(-5).map(r => r.path)}`);
+    totalRequestSeen++;
+    requestSeen.push(req.path);
+    if (requestSeen.length > 5) {
+      requestSeen.shift();
+    }
+    debug(`Total request seen: ${totalRequestSeen}
+      Last 5 endpoints called: ${requestSeen}`);
   });
 
   next();
@@ -52,28 +63,25 @@ app.post('/getById', async (req, res) => {
 });
 
 app.post('/sendAllToS3', async (req, res) => {
-  let ids = [];
+  const data = new Map();
   for (let id of req.body.ids) {
-    data[id] = await client.getById(id, req);
-    ids.push(id);
+    const item = await client.getById(id, req);
+    if (!data.has(id)) {
+      data.set(id, item);
+    }
   }
 
   // Do something with all data
-  await client.sendAllToS3(ids.map(id => data[id]));
-
-  // We finish the request, but we still have data in memory, we are good developer, let's remove it, we don't want to create any memory leak
-  for (let id of ids) {
-    delete data[id];
-  }
+  await client.sendAllToS3(Array.from(data));
 
   res.send(`Ok`);
 });
 
 app.post('/whatNumber ', async (req, res) => {
-  let id = req.body.number;
-  const data = Array(100000).fill(4);
+  const id = req.body.number;
 
   const promise = new Promise((resolve) => {
+    const data = Array(100000).fill(4);
     const sum = data.reduce((acc, val) => acc + val, id);
     if (sum%2 == 0) {
       return resolve('It\'s even');
@@ -101,13 +109,13 @@ app.post('/whatNumber ', async (req, res) => {
 // Good ingeneer write code that is easy to read and maintain
 // We use simple operation splitted in multiple lines
 app.post('/computeSpecialSum', async (req, res) => {
-  const result = req.body.numbers.flatMap(val => Array(50).fill(val))
-    .map(val => val+1)
-    .map(val => val*2)
-    .map(val => val-1)
-    .reduce((acc, val) => acc + val, 0);
+  let sum = 0;
+  for (const num of req.body.numbers) {
+    sum += ((num + 1) * 2) - 1;
+  }
+  sum *= 50;
 
-  res.send(result);
+  res.send(sum);
 })
 
 app.use((err, req, res, next) => {
