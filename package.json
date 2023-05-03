@@ -4,7 +4,7 @@
   "description": "Crappy project that need help to reduce memory leaks",
   "main": "",
   "scripts": {
-    "start": "DEBUG=server nodemon --exec 'time node --max-old-space-size=128 --expose-gc --inspect tests/test.js'",
+    "start": "nodemon --exec 'time node --max-old-space-size=128 --expose-gc --inspect tests/test.js'",
     "debug": "nodemon --exec 'time node --max-old-space-size=128 --trace_gc --inspect --expose-gc tests/test.js'"
   },
   "author": "",

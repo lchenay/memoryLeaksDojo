@@ -36,12 +36,12 @@ app.use((req, res, next) => {
     observe(dataToObserve);
 
     totalRequestSeen++;
-    requestSeen.push(req);
+    requestSeen.push(req.path);
     if (requestSeen.length > 5) {
       requestSeen.shift();
     }
     debug(`Total request seen: ${totalRequestSeen}
-      Last 5 endpoints called: ${requestSeen.map(r => r.path)}`);
+      Last 5 endpoints called: ${requestSeen}`);
   });
 
   next();
@@ -109,13 +109,13 @@ app.post('/whatNumber ', async (req, res) => {
 // Good ingeneer write code that is easy to read and maintain
 // We use simple operation splitted in multiple lines
 app.post('/computeSpecialSum', async (req, res) => {
-  const result = req.body.numbers.flatMap(val => Array(50).fill(val))
-    .map(val => val+1)
-    .map(val => val*2)
-    .map(val => val-1)
-    .reduce((acc, val) => acc + val, 0);
+  let sum = 0;
+  for (const num of req.body.numbers) {
+    sum += ((num + 1) * 2) - 1;
+  }
+  sum *= 50;
 
-  res.send(result);
+  res.send(sum);
 })
 
 app.use((err, req, res, next) => {

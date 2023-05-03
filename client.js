@@ -1,11 +1,10 @@
-const _ = require('lodash');
 const repository = require('./libs/repository');
 const cache = new Map();
 const schema = repository.schema();
 const CACHE_SIZE = 10;
 
 const client = module.exports = {
-    exists: _.memoize(repository.exists),
+    exists: repository.exists,
     getById: async (id) => {
         // We can early exists when we know that the data is not in the DB
         // Let's not wait the full round trip, to return the not found if we can early exit
